@@ -6,7 +6,7 @@ toDigitsRev n
     | n <= 0     = []
     | otherwise = (n `mod` 10) : toDigitsRev (n `div` 10)
 
-doubleEveryOther :: Integer -> [Integer]
+doubleEveryOther :: Integer -> [Integer]  -- I know this isn't the spec.
 doubleEveryOther = zipWith (*) (cycle [1, 2]) . toDigitsRev
 
 sumDigits :: [Integer] -> Integer
