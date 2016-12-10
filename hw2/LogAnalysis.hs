@@ -25,10 +25,34 @@ parseMessage m
         ws = words m
         (w1:w2:w3:ws') = ws
 
+parse :: String -> [LogMessage]
+parse = (map parseMessage) . lines
+
+timestamp :: LogMessage -> TimeStamp
+timestamp (LogMessage _ ts _) = ts
+timestamp (Unknown _) = error "No timestamp."
+
+highPriority :: LogMessage -> Bool
+highPriority ((Error p) _ _)
+    | p >= 50    = True
+    | otherwise = False
+highPriority _  = False
+
+insert :: LogMessage -> MessageTree -> MessageTree
+insert (Unknown _) t = t
+insert m Leaf = Node Leaf m Leaf
+insert m (Node left m' right)
+    | (timestamp m) <= (timestamp m') = Node (insert m left) m' right
+    | otherwise                       = Node left m' (insert m right)
+
+build :: [LogMessage] -> MessageTree
+build = foldr insert Leaf
+
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf = []
+inOrder (Node left m right) = inOrder left ++ (m : inOrder right)
+
 main :: IO ()
 main = do
-    print $ parseMessage "E 2 562 help help"
-    print $ parseMessage "I 562 2 help help"
-    print $ parseMessage "W 562 help help"
-    print $ parseMessage "D 2 562 help help"
-    print $ parseMessage "D"
+    print . inOrder . build $ ms
+    where ms = parse "E 60 562 help help\nI 563 2 help help\nW 561 help help\nD 2 560 help help\nD"
