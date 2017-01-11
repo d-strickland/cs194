@@ -33,7 +33,7 @@ timestamp (LogMessage _ ts _) = ts
 timestamp (Unknown _) = error "No timestamp."
 
 highPriority :: LogMessage -> Bool
-highPriority ((Error p) _ _)
+highPriority (LogMessage (Error p) _ _)
     | p >= 50    = True
     | otherwise = False
 highPriority _  = False
@@ -52,7 +52,8 @@ inOrder :: MessageTree -> [LogMessage]
 inOrder Leaf = []
 inOrder (Node left m right) = inOrder left ++ (m : inOrder right)
 
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong = map (\(LogMessage _ _ m) -> m) . inOrder . build . filter highPriority
+
 main :: IO ()
-main = do
-    print . inOrder . build $ ms
-    where ms = parse "E 60 562 help help\nI 563 2 help help\nW 561 help help\nD 2 560 help help\nD"
+main = testWhatWentWrong parse whatWentWrong "error.log" >>= mapM_ print
